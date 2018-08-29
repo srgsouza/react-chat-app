@@ -1,7 +1,7 @@
 // ref Jim Haff's code
 import React, { Component } from 'react';
 import { socket } from '../index'
-// import './style.css';
+import './styles.css';
 // import ChatRoom from '../ChatRoom';
 
 // Smart Component
@@ -26,17 +26,24 @@ export default class ChatBoard extends Component {
     });
 
     // set up the listener for the users,
-    socket.on('users', (usernames) => {
-      this.setState({ usernames: [...usernames]});
+    socket.on('updateUserList', (username) => {
+      console.log("New User Joined");
+      console.log(username);
+      
+      this.setState({ 
+        // usernames: [...this.state.usernames, username]});      
+        usernames: username
+      });      
+
     });
 
     // listen for new messages sent from server
     socket.on('newMessage',  (message) => {
       console.log('## Got New Message');
-      
-      console.log(message.text);
+      console.log('## Message is ', message)
+      console.log('## Message.text is ', message.text);
       this.setState({
-        messages: [...this.state.messages, message.text]
+        messages: [...this.state.messages, message]
       })
     });
 
@@ -50,9 +57,9 @@ export default class ChatBoard extends Component {
 
   handleSubmit = async (e) => {
     e.preventDefault();
-    await this.setState({
-      messages: [...this.state.messages, this.state.newMessage]
-    })
+    // await this.setState({
+    //   messages: [...this.state.messages, this.state.newMessage]
+    // })
     console.log('User is: ', this.props.user);   
     console.log('Messages is :', this.state.newMessage);
     
@@ -65,23 +72,36 @@ export default class ChatBoard extends Component {
   }
 
   render() {
-    const messagesList = this.state.messages.map((message, i) => {
+    const usernamesList = this.state.usernames.map((username, i) => {
       return (
-        <li>{message}</li>
+        <li>{username}</li>
       )
     })
+    const messagesList = this.state.messages.map((message, i) => {
+      return (
+        <li>{message.from}: {message.text}</li>
+      )
+    })
+
+
     return (
-      <div className="wrapper">
+      <main>
+        <div class="chat__main">
+          <ol id="messages" class="chat__messages"></ol>
+          
+          <ul>{messagesList}</ul>
+          
+          <div class="chat__footer">
+            <form onSubmit={this.handleSubmit}>
+              <input type="text" name="newMessage" ref={el => this.inputEntry = el} onChange={this.handleInputChange} placeholder="Message" autofocus autocomplete="off" />
+              <button>Send</button>
+            </form>
+            <button id="send-location" type="button" name="button">Send location</button>
+          </div>
+        </div>
 
-        <p>Welcome to the chat app</p>       
 
-        <form onSubmit={this.handleSubmit}>
-          <input name="newMessage" ref={el => this.inputEntry = el} type="text" onChange={this.handleInputChange} placeholder="Type Message"  />
-          <button>Send</button>
-        </form>
-
-          {messagesList}
-      </div>
+      </main>
     )
   }
 }
